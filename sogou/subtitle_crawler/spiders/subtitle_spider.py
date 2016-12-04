@@ -32,7 +32,13 @@ class SubTitleSpider(scrapy.Spider):
     def parse(self, response):
         pages = response.selector.xpath('//div[@id="dict_page_list"]/ul/li/span/a/text()').extract()
 
-        if pages[-1] == '下一页':
+        if len(pages) == 0:
+            href = '/default'
+            url = response.url + href
+            request = scrapy.Request(url, callback=self.parse_list)
+            yield request
+
+        elif pages[-1] == '下一页':
             max_page = int(pages[-2])
 
             for i in range(1, max_page + 1):
@@ -41,6 +47,8 @@ class SubTitleSpider(scrapy.Spider):
 
                 request = scrapy.Request(url, callback=self.parse_list)
                 yield request
+        else:
+            print 'Unkown pages: ', pages
 
     def parse_list(self, response):
         detail_urls = response.selector.xpath('//div[contains(@class, "dict_detail_block")]/div[2]/div/a/@href').extract()
