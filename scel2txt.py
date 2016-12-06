@@ -4,6 +4,7 @@
 
 import struct
 import sys
+import os
 
 # 搜狗的scel词库就是保存的文本的unicode编码，每两个字节一个字符（中文汉字或者英文字母）
 # 找出其每部分的偏移位置即可
@@ -182,10 +183,14 @@ def deal(file_name):
 
 if __name__ == '__main__':
 
-    o = ['网络流行新词.scel']
+    # o = ['网络流行新词.scel']
 
-    for f in o:
-        deal(f)
+    # for f in o:
+    #     deal(f)
+
+    for root, dirs, files in os.walk('sogou/result'):
+        for file_name in files:
+            print file_name
 
     # 保存结果
     # f = open('sougou.txt', 'w')
