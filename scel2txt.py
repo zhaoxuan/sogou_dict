@@ -171,7 +171,7 @@ def deal(file_name):
 
     if data[0:12] != "\x40\x15\x00\x00\x44\x43\x53\x01\x01\x00\x00\x00":
         print '确认你选择的是搜狗(.scel)词库?'
-        sys.exit(0)
+        return file_name, False
 
     # print '词库名：', byte2str(data[0x130:0x338]).encode('utf-8')
     # print '词库类型：', byte2str(data[0x338:0x540]).encode('utf-8')
@@ -181,7 +181,6 @@ def deal(file_name):
     try:
         getPyTable(data[startPy:startChinese])
         getChinese(data[startChinese:])
-
     except Exception as e:
         print e
         status = False
@@ -202,9 +201,10 @@ if __name__ == '__main__':
             GTable = []
             input_file = '%s/%s' % (root, file_name)
             dict_name, status = deal(input_file)
+            dict_name = dict_name.replace('/', '_').replace('\\', '_')
 
             if status is False:
-                logging.ERROR(input_file)
+                logging.error(input_file)
 
             f = open('dicts/' + dict_name + '.txt', 'w')
 
