@@ -54,13 +54,12 @@ class SubTitleSpider(scrapy.Spider):
         detail_urls = response.selector.xpath('//div[contains(@class, "dict_detail_block")]/div[2]/div/a/@href').extract()
 
         for url in detail_urls:
-            code, msg = commands.getstatusoutput('wget -q --content-disposition --tries=3 --directory-prefix=result/ "%s"' % (url))
+            download_url = 'wget -q --restrict-file-names=nocontrol --content-disposition --tries=3 --directory-prefix=result/ "%s"' % (url)
+            code, msg = commands.getstatusoutput(download_url)
 
         if code != 0:
             logger.info(msg)
             print url
-        # request = scrapy.Request(url, callback=self.parse_file)
-        # yield request
 
     def parse_file(self, response):
         filename = re.findall(r'attachment; filename="(.*)"', response.headers.get('Content-Disposition', ''))
