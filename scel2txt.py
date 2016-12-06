@@ -5,6 +5,7 @@
 import struct
 import sys
 import os
+import logging
 
 # 搜狗的scel词库就是保存的文本的unicode编码，每两个字节一个字符（中文汉字或者英文字母）
 # 找出其每部分的偏移位置即可
@@ -28,9 +29,10 @@ import os
 #
 #      {word_len,word,ext_len,ext} 一共重复same次 同音词 相同拼音表
 
+logging.basicConfig(filename='scel_error.log', level=logging.DEBUG)
+
 # 拼音表偏移，
 startPy = 0x1540
-
 
 # 汉语词组表偏移
 startChinese = 0x2628
@@ -144,7 +146,6 @@ def getChinese(data):
 
             # 中文词组
             word = byte2str(data[pos:pos + c_len])
-            print word.encode('utf-8')
             pos += c_len
 
             # 扩展数据长度
@@ -164,6 +165,8 @@ def getChinese(data):
 def deal(file_name):
     f = open(file_name, 'rb')
     data = f.read()
+    f.close()
+    status = True
     # print 'Total bytes: ', len(data)
 
     if data[0:12] != "\x40\x15\x00\x00\x44\x43\x53\x01\x01\x00\x00\x00":
@@ -175,10 +178,16 @@ def deal(file_name):
     # print '描述信息：', byte2str(data[0x540:0xd40]).encode('utf-8')
     # print '词库示例：', byte2str(data[0xd40:startPy]).encode('utf-8')
 
-    getPyTable(data[startPy:startChinese])
-    getChinese(data[startChinese:])
+    try:
+        getPyTable(data[startPy:startChinese])
+        getChinese(data[startChinese:])
 
-    f.close()
+    except Exception as e:
+        print e
+        status = False
+        return byte2str(data[0x130:0x338]).encode('utf-8'), status
+
+    return byte2str(data[0x130:0x338]).encode('utf-8'), status
 
 
 if __name__ == '__main__':
@@ -190,7 +199,20 @@ if __name__ == '__main__':
 
     for root, dirs, files in os.walk('sogou/result'):
         for file_name in files:
-            print file_name
+            GTable = []
+            input_file = '%s/%s' % (root, file_name)
+            dict_name, status = deal(input_file)
+
+            if status is False:
+                logging.ERROR(input_file)
+
+            f = open('dicts/' + dict_name + '.txt', 'w')
+
+            for count, py, word in GTable:
+                f.write(unicode(word).encode('UTF-8'))
+                f.write('\n')
+
+            f.close()
 
     # 保存结果
     # f = open('sougou.txt', 'w')
